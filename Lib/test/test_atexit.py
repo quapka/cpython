@@ -65,6 +65,29 @@ class FunctionalTest(unittest.TestCase):
                          ["called classmethod from <class '__main__.A'>"])
         self.assertFalse(res.err)
 
+    def test_register_classmethod_through_decorator(self):
+        code = textwrap.dedent(
+            """
+            import atexit
+
+            class A:
+                @atexit.register
+                @classmethod
+                def foo(cls, *args, **kwargs):
+                    print(f"called classmethod from {cls}")
+
+                @classmethod
+                @atexit.register
+                def bar(cls, *args, **kwargs):
+                    print(f"called classmethod from {cls}")
+        """
+        )
+        res = script_helper.assert_python_ok("-c", code)
+        self.assertEqual(res.out.decode().splitlines(),
+                         ["called classmethod from <class '__main__.A'>"],
+                         ["called classmethod from <class '__main__.A'>"])
+        self.assertFalse(res.err)
+
     def test_register_staticmethod_outside_of_definition(self):
         code = textwrap.dedent(
             """
@@ -82,6 +105,28 @@ class FunctionalTest(unittest.TestCase):
         self.assertEqual(res.out.decode().splitlines(),
                          ["called staticmethod"])
         self.assertFalse(res.err)
+
+    def test_register_staticmethod_through_decorator(self):
+        code = textwrap.dedent(
+            """
+            import atexit
+
+            class A:
+                @atexit.register
+                @staticmethod
+                def f(*args, **kwargs):
+                    print(f"called staticmethod")
+
+                @staticmethod
+                @atexit.register
+                def f(*args, **kwargs):
+                    print(f"called staticmethod")
+        """
+        )
+        res = script_helper.assert_python_ok("-c", code)
+        self.assertEqual(res.out.decode().splitlines(),
+                         ["called staticmethod"],
+                         ["called staticmethod"])
 
 @support.cpython_only
 class SubinterpreterTest(unittest.TestCase):
