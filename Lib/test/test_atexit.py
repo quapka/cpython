@@ -47,6 +47,41 @@ class FunctionalTest(unittest.TestCase):
         self.assertEqual(res.out.decode().splitlines(), ["atexit2", "atexit1"])
         self.assertFalse(res.err)
 
+    def test_register_classmethod_outside_of_definition(self):
+        code = textwrap.dedent(
+            """
+            import atexit
+
+            class A:
+                @classmethod
+                def f(cls, *args, **kwargs):
+                    print(f"called classmethod from {cls}")
+
+            atexit.register(A.f)
+        """
+        )
+        res = script_helper.assert_python_ok("-c", code)
+        self.assertEqual(res.out.decode().splitlines(),
+                         ["called classmethod from <class '__main__.A'>"])
+        self.assertFalse(res.err)
+
+    def test_register_staticmethod_outside_of_definition(self):
+        code = textwrap.dedent(
+            """
+            import atexit
+
+            class A:
+                @staticmethod
+                def f(*args, **kwargs):
+                    print(f"called staticmethod")
+
+            atexit.register(A.f)
+        """
+        )
+        res = script_helper.assert_python_ok("-c", code)
+        self.assertEqual(res.out.decode().splitlines(),
+                         ["called staticmethod"])
+        self.assertFalse(res.err)
 
 @support.cpython_only
 class SubinterpreterTest(unittest.TestCase):
